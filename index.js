@@ -35,7 +35,7 @@ const client = new Client({
     }),
     puppeteer: {
         headless: true,
-        executablePath: '/usr/bin/google-chrome',
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/opt/render/.cache/puppeteer/chrome/linux-145.0.7632.77/chrome-linux64/chrome',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',

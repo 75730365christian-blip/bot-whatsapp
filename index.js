@@ -34,6 +34,8 @@ const client = new Client({
         dataPath: './session-data'
     }),
     puppeteer: {
+        headless: true,
+        executablePath: '/usr/bin/google-chrome',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -42,8 +44,7 @@ const client = new Client({
             '--no-first-run',
             '--no-zygote',
             '--disable-gpu'
-        ],
-        headless: false
+        ]
     }
 });
 

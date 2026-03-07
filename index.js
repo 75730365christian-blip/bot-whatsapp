@@ -52,11 +52,26 @@ function findChrome() {
         if (fs.existsSync(chromePathFile)) {
             const savedPath = fs.readFileSync(chromePathFile, 'utf8').trim();
             console.log(`📄 Contenido del archivo: "${savedPath}"`);
+
+            // Intentar con la ruta guardada
             if (savedPath && fs.existsSync(savedPath)) {
                 console.log(`✅ Usando ruta guardada por el build.`);
                 return savedPath;
             } else {
-                console.log(`⚠️ Ruta guardada no válida.`);
+                console.log(`⚠️ Ruta guardada no válida. Intentando búsqueda directa...`);
+
+                // BÚSQUEDA DIRECTA: Buscar el archivo chrome en el directorio de caché
+                const { execSync } = require('child_process');
+                const baseDir = '/opt/render/.cache/puppeteer/chrome';
+                try {
+                    const found = execSync(`find ${baseDir} -name chrome -type f 2>/dev/null | head -1`, { encoding: 'utf8' }).trim();
+                    if (found && fs.existsSync(found)) {
+                        console.log(`🔍 Chrome encontrado mediante búsqueda directa: ${found}`);
+                        return found;
+                    }
+                } catch (e) {
+                    console.log(`❌ Error en búsqueda directa: ${e.message}`);
+                }
             }
         } else {
             console.log(`⚠️ Archivo ${chromePathFile} no existe.`);
@@ -72,7 +87,7 @@ function findChrome() {
         '/opt/render/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome',
         '/opt/render/project/src/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome'
     ];
-    
+
     const { execSync } = require('child_process');
     for (const pathPattern of possiblePaths) {
         if (pathPattern.includes('*')) {
@@ -90,7 +105,7 @@ function findChrome() {
             }
         }
     }
-    
+
     throw new Error('❌ No se pudo encontrar Chrome. Revisa la instalación.');
 }
 

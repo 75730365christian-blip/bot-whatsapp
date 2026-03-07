@@ -1,32 +1,40 @@
 #!/usr/bin/env bash
-
-# Salir si hay algún error
 set -o errexit
 
-echo "🚀 Iniciando script de build para Render..."
+echo "🚀 Iniciando script de build optimizado para Render..."
 
-# Instalar dependencias de Node.js
+# Instalar dependencias
 echo "📦 Instalando dependencias con npm..."
 npm install
 
-# Definir y crear el directorio de caché de Puppeteer
+# Definir y limpiar directorio de caché
 PUPPETEER_CACHE_DIR="/opt/render/.cache/puppeteer"
-echo "🗂️  Asegurando que el directorio de caché exista: $PUPPETEER_CACHE_DIR"
+echo "🗂️ Preparando directorio de caché: $PUPPETEER_CACHE_DIR"
+rm -rf $PUPPETEER_CACHE_DIR
 mkdir -p $PUPPETEER_CACHE_DIR
 
-# Instalar Chrome usando la herramienta oficial de Puppeteer
-echo "🌐 Instalando Chrome con npx puppeteer browsers install chrome..."
+# Instalar Chrome
+echo "🌐 Instalando Chrome..."
 npx puppeteer browsers install chrome
 
-# --- ¡¡¡ PARTE CLAVE !!! ---
-# Copiar Chrome instalado al directorio de caché para asegurar su persistencia
-echo "📋 Copiando Chrome al directorio de caché..."
-# La ruta exacta puede variar ligeramente, usamos un comando más flexible para copiar
-if [ -d "/opt/render/project/src/.cache/puppeteer/chrome" ]; then
-    cp -R /opt/render/project/src/.cache/puppeteer/chrome/* $PUPPETEER_CACHE_DIR/ || true
-    echo "✅ Chrome copiado exitosamente."
+# Buscar dónde se instaló realmente Chrome
+echo "🔍 Buscando la instalación de Chrome..."
+CHROME_PATH=$(find /opt/render -name chrome -type f 2>/dev/null | head -1)
+
+if [ -n "$CHROME_PATH" ]; then
+    echo "✅ Chrome encontrado en: $CHROME_PATH"
+    
+    # Crear estructura de directorios esperada por tu index.js
+    TARGET_DIR="$PUPPETEER_CACHE_DIR/chrome/linux-145.0.7632.77/chrome-linux64"
+    mkdir -p "$TARGET_DIR"
+    
+    # Copiar Chrome a la ruta esperada
+    cp "$CHROME_PATH" "$TARGET_DIR/chrome"
+    chmod +x "$TARGET_DIR/chrome"
+    echo "✅ Chrome copiado a la ruta esperada"
 else
-    echo "⚠️ No se encontró Chrome en la ruta de origen para copiar. Puede que ya esté en el destino."
+    echo "❌ No se pudo encontrar Chrome después de la instalación"
+    exit 1
 fi
 
-echo "🎉 Script de build finalizado."
+echo "🎉 Build completado exitosamente"

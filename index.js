@@ -30,34 +30,44 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
 
-// *** FUNCIÓN UNIFICADA PARA ENCONTRAR CHROME ***
-// *** FUNCIÓN UNIFICADA PARA ENCONTRAR CHROME ***
+// *** FUNCIÓN PARA ENCONTRAR CHROME (VERSIÓN FINAL) ***
 function findChrome() {
-    // 1. Prioridad ABSOLUTA: Ruta guardada por el script de build
-    const chromePathFile = '/opt/render/project/src/chrome.path'; // Ruta FIJA
-    console.log(`🔍 Buscando archivo de ruta en: ${chromePathFile}`);
-    
-    try {
-        if (require('fs').existsSync(chromePathFile)) {
-            const savedPath = require('fs').readFileSync(chromePathFile, 'utf8').trim();
-            console.log(`📄 Contenido del archivo: "${savedPath}"`);
-            if (savedPath && require('fs').existsSync(savedPath)) {
-                console.log(`✅ Usando ruta de Chrome guardada por el build: ${savedPath}`);
-                return savedPath;
-            } else {
-                console.log(`⚠️ La ruta guardada no es válida o el archivo no existe: ${savedPath}`);
-            }
+    console.log("🔍 Iniciando búsqueda de Chrome...");
+
+    // 1. Leer de variable de entorno (más fiable en Render)
+    if (process.env.CHROME_PATH) {
+        console.log(`📌 Usando CHROME_PATH de variable de entorno: ${process.env.CHROME_PATH}`);
+        if (fs.existsSync(process.env.CHROME_PATH)) {
+            console.log(`✅ Chrome válido en variable de entorno.`);
+            return process.env.CHROME_PATH;
         } else {
-            console.log(`⚠️ El archivo ${chromePathFile} no existe.`);
+            console.log(`⚠️ CHROME_PATH de entorno no es válido.`);
         }
-    } catch (e) {
-        console.log(`❌ Error al leer el archivo de ruta: ${e.message}`);
     }
 
-    // 2. Si no hay ruta guardada válida, buscar en rutas probables
+    // 2. Buscar archivo guardado por el build (fallback)
+    const chromePathFile = '/opt/render/project/src/chrome.path';
+    console.log(`🔍 Buscando archivo de ruta en: ${chromePathFile}`);
+    try {
+        if (fs.existsSync(chromePathFile)) {
+            const savedPath = fs.readFileSync(chromePathFile, 'utf8').trim();
+            console.log(`📄 Contenido del archivo: "${savedPath}"`);
+            if (savedPath && fs.existsSync(savedPath)) {
+                console.log(`✅ Usando ruta guardada por el build.`);
+                return savedPath;
+            } else {
+                console.log(`⚠️ Ruta guardada no válida.`);
+            }
+        } else {
+            console.log(`⚠️ Archivo ${chromePathFile} no existe.`);
+        }
+    } catch (e) {
+        console.log(`❌ Error al leer archivo: ${e.message}`);
+    }
+
+    // 3. Buscar en rutas estándar (último recurso)
     console.log("🔍 Buscando Chrome en rutas estándar...");
     const possiblePaths = [
-        process.env.PUPPETEER_EXECUTABLE_PATH,
         '/opt/render/.cache/puppeteer/chrome/linux-145.0.7632.77/chrome-linux64/chrome',
         '/opt/render/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome',
         '/opt/render/project/src/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome'
@@ -65,18 +75,16 @@ function findChrome() {
     
     const { execSync } = require('child_process');
     for (const pathPattern of possiblePaths) {
-        if (!pathPattern) continue;
-        
         if (pathPattern.includes('*')) {
             try {
                 const found = execSync(`find ${pathPattern.split('*')[0]} -name chrome -type f 2>/dev/null | head -1`, { encoding: 'utf8' }).trim();
-                if (found && require('fs').existsSync(found)) {
+                if (found && fs.existsSync(found)) {
                     console.log(`🔍 Chrome encontrado en: ${found}`);
                     return found;
                 }
             } catch (e) {}
         } else {
-            if (require('fs').existsSync(pathPattern)) {
+            if (fs.existsSync(pathPattern)) {
                 console.log(`🔍 Chrome encontrado en: ${pathPattern}`);
                 return pathPattern;
             }
@@ -85,6 +93,7 @@ function findChrome() {
     
     throw new Error('❌ No se pudo encontrar Chrome. Revisa la instalación.');
 }
+
 // *** CREACIÓN DEL CLIENTE ***
 const chromePath = findChrome();
 console.log(`✅ Usando Chrome: ${chromePath}`);

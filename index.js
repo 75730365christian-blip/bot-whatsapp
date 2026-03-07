@@ -110,7 +110,7 @@ function findChrome() {
 }
 
 // *** CREACIÓN DEL CLIENTE CON RUTA DE CHROME PERSISTENTE ***
-const chromePath = '/opt/render/project/chrome/chrome/linux-145.0.7632.77/chrome-linux64/chrome';
+const chromePath = '/opt/render/project/chrome/chrome/linux-146.0.7680.66/chrome-linux64/chrome';
 console.log(`✅ Usando Chrome (ruta persistente): ${chromePath}`);
 
 const client = new Client({

@@ -109,9 +109,10 @@ function findChrome() {
     throw new Error('❌ No se pudo encontrar Chrome. Revisa la instalación.');
 }
 
-// *** CREACIÓN DEL CLIENTE Xultimo verificar si estaDDD***
-const chromePath = findChrome();
-console.log(`✅ Usando Chrome: ${chromePath}`);
+// *** CREACIÓN DEL CLIENTE CON RUTA FIJA DE CHROME ***
+// Esta es la ruta exacta donde Puppeteer instala Chrome en Render
+const chromePath = '/opt/render/.cache/puppeteer/chrome/linux-145.0.7632.77/chrome-linux64/chrome';
+console.log(`✅ Usando Chrome (ruta fija): ${chromePath}`);
 
 const client = new Client({
     authStrategy: new LocalAuth({

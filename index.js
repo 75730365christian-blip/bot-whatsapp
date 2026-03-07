@@ -109,7 +109,7 @@ function findChrome() {
     throw new Error('❌ No se pudo encontrar Chrome. Revisa la instalación.');
 }
 
-// *** CREACIÓN DEL CLIENTE ***
+// *** CREACIÓN DEL CLIENTE Xultimo verificar si estaDDD***
 const chromePath = findChrome();
 console.log(`✅ Usando Chrome: ${chromePath}`);
 

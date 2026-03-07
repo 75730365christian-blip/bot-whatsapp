@@ -28,11 +28,11 @@ const GRUPOS_PERMITIDOS = [
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
-const fs = require('fs');
 const path = require('path');
 
-// *** NUEVA FUNCIÓN: Leer ruta de Chrome guardada por el build ***
-function getChromePathFromBuild() {
+// *** FUNCIÓN UNIFICADA PARA ENCONTRAR CHROME ***
+function findChrome() {
+    // 1. Prioridad: Ruta guardada por el script de build
     try {
         const chromePathFile = path.join(__dirname, 'chrome.path');
         if (fs.existsSync(chromePathFile)) {
@@ -45,22 +45,9 @@ function getChromePathFromBuild() {
     } catch (e) {
         console.log("No se pudo leer la ruta guardada, usando búsqueda normal.");
     }
-    return null;
-}
 
-// Modifica la función findChrome para priorizar la ruta guardada
-function findChrome() {
-    // 1. Prioridad: Ruta guardada por el build
-    const buildPath = getChromePathFromBuild();
-    if (buildPath) return buildPath;
-
-    // 2. Si no, continuar con la búsqueda normal...
-    // (el resto de tu función findChrome actual permanece igual)
-    const { execSync } = require('child_process');
-    // ... (resto del código de búsqueda) ...
-}
-// *** FUNCIÓN PARA ENCONTRAR CHROME ***
-function findChrome() {
+    // 2. Si no hay ruta guardada, buscar en rutas probables
+    console.log("🔍 Buscando Chrome en rutas estándar...");
     const possiblePaths = [
         process.env.PUPPETEER_EXECUTABLE_PATH,
         '/opt/render/.cache/puppeteer/chrome/linux-145.0.7632.77/chrome-linux64/chrome',
@@ -68,29 +55,27 @@ function findChrome() {
         '/opt/render/project/src/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome'
     ];
     
-    // Buscar con patrón glob simple
     const { execSync } = require('child_process');
     for (const pathPattern of possiblePaths) {
         if (!pathPattern) continue;
         
-        // Si tiene comodín, buscar con find
         if (pathPattern.includes('*')) {
             try {
                 const found = execSync(`find ${pathPattern.split('*')[0]} -name chrome -type f 2>/dev/null | head -1`, { encoding: 'utf8' }).trim();
-                if (found && require('fs').existsSync(found)) {
+                if (found && fs.existsSync(found)) {
                     console.log(`🔍 Chrome encontrado en: ${found}`);
                     return found;
                 }
             } catch (e) {}
         } else {
-            if (require('fs').existsSync(pathPattern)) {
+            if (fs.existsSync(pathPattern)) {
                 console.log(`🔍 Chrome encontrado en: ${pathPattern}`);
                 return pathPattern;
             }
         }
     }
     
-    throw new Error('No se pudo encontrar Chrome. Revisa la instalación.');
+    throw new Error('❌ No se pudo encontrar Chrome. Revisa la instalación.');
 }
 
 // *** CREACIÓN DEL CLIENTE ***
